@@ -82,7 +82,7 @@ vec3 scene(vec2 uv,float t){
   col+=vec3(.95,.5,.2)*uWarm*pow(clamp(1.-uv.y,0.,1.),3.)*.6;
   vec2 sp=vec2(uRes.x/uRes.y*.78,.8);
   float d=length(uv-sp);
-  col+=vec3(1.,.85,.55)*(exp(-d*4.)*.5+exp(-d*20.)*.9)*uLight*(1.-uCover);
+  col+=vec3(1.,.85,.55)*(exp(-d*4.)*.5+exp(-d*20.)*.9)*uLight*(1.-uCover)*(1.-uCover);
   float dark=(1.-uLight)*(1.-uCover);
   vec2 g=uv*60.;
   float rs=h21(floor(g));

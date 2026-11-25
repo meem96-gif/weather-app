@@ -86,3 +86,20 @@ h2 { margin: 28px 4px 10px; font-size: 1rem; font-weight: 600; }
   .details > div { padding: 12px; }
   .details dd { font-size: 1.1rem; }
 }
+
+/* Search stacks on small screens */
+@media (max-width: 560px) {
+  #search { border-radius: 28px; padding: 14px 16px; }
+  input { flex: 1 1 100%; padding-bottom: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.3); }
+  #search button { flex: 1; }
+}
+
+/* Page fills the screen: forecast sits at the bottom, no dead gap */
+main { min-height: 100svh; display: flex; flex-direction: column; }
+#weather { flex: 1; display: flex; flex-direction: column; }
+#weather[hidden] { display: none; }
+#weather h2 { margin-top: auto; padding-top: 28px; }
+
+/* Hide the scrollbar under the forecast tiles (still swipes) */
+#forecast { scrollbar-width: none; }
+#forecast::-webkit-scrollbar { display: none; }
