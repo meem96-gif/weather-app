@@ -28,27 +28,47 @@
 .poppins-black-italic { font-family: "Poppins", sans-serif; font-weight: 900; font-style: italic; }
 
 
-/* The whole page takes its colors from the current weather */
-:root { --bg: #dfe7ee; --ink: #14212b; }
-body[data-theme="clear"] { --bg: #f7c948; --ink: #2a1d00; }
-body[data-theme="cloud"] { --bg: #c9d2db; --ink: #1a232c; }
-body[data-theme="rain"]  { --bg: #2f4a68; --ink: #eef4fa; }
-body[data-theme="storm"] { --bg: #2a2740; --ink: #f1eefc; }
-body[data-theme="snow"]  { --bg: #e8f0f7; --ink: #1b2b3a; }
-body[data-theme="night"] { --bg: #121c33; --ink: #e8eefc; }
+/* Weather themes now tint the photo instead of replacing it */
+:root { --ink: #fff; --tint: rgba(10, 20, 30, 0.55); }
+body[data-theme="clear"] { --tint: rgba(70, 45, 0, 0.40); }
+body[data-theme="cloud"] { --tint: rgba(26, 35, 44, 0.55); }
+body[data-theme="rain"]  { --tint: rgba(20, 40, 70, 0.60); }
+body[data-theme="storm"] { --tint: rgba(30, 25, 55, 0.65); }
+body[data-theme="snow"]  { --tint: rgba(30, 50, 75, 0.50); }
+body[data-theme="night"] { --tint: rgba(8, 14, 30, 0.70); }
 
 * { box-sizing: border-box; margin: 0; }
 
 body {
   min-height: 100vh;
-  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a232c url("media/fabian-quintero-UWQP2mh5YJI-unsplash.jpg") center / cover no-repeat;
   color: var(--ink);
   font-family: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
   line-height: 1.5;
-  transition: background 0.6s ease, color 0.6s ease;
 }
 
-main { max-width: 720px; margin: 0 auto; padding: 32px 24px 64px; }
+/* Dark overlay so text stays readable; its color changes with the weather */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: var(--tint);
+  transition: background 0.6s ease;
+  pointer-events: none;
+}
+
+main {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
 
 .sr-only {
   position: absolute; width: 1px; height: 1px; overflow: hidden;
@@ -74,7 +94,7 @@ button {
   color: var(--ink); background: transparent;
   border: 2px solid var(--ink); border-radius: 999px;
 }
-button.solid { background: var(--ink); color: var(--bg); }
+button.solid { background: var(--ink); color: #14212b; }
 button:hover { opacity: 0.85; }
 
 input:focus-visible, button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
