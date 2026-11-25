@@ -106,6 +106,142 @@ function useMyLocation() {
   );
 }
 
+// ---------- live weather background ----------
+const fx = (() => {
+  const canvas = $("fx");
+  const ctx = canvas.getContext("2d");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let mode = "none", items = [], w = 0, h = 0, flash = 0, t = 0, running = false;
+
+  function spawn(initial) {
+    const r = Math.random;
+    if (mode === "rain" || mode === "storm")
+      return { x: r() * w * 1.2 - w * 0.1, y: initial ? r() * h : -20, len: 12 + r() * 18, v: (mode === "storm" ? 22 : 15) + r() * 8 };
+    if (mode === "snow")
+      return { x: r() * w, y: initial ? r() * h : -10, rad: 1.5 + r() * 3, v: 0.6 + r() * 1.2, drift: r() * Math.PI * 2 };
+    if (mode === "night")
+      return { x: r() * w, y: r() * h, rad: 0.5 + r() * 1.5, ph: r() * Math.PI * 2 };
+    if (mode === "cloud")
+      return { x: r() * w, y: r() * h * 0.6, s: 120 + r() * 160, v: 0.2 + r() * 0.4 };
+    return {};
+  }
+
+  function build() {
+    const area = (w * h) / 1e5;
+    const count = { rain: area * 12, storm: area * 20, snow: area * 8, night: area * 6, cloud: 6 }[mode] || 0;
+    items = Array.from({ length: Math.round(count) }, () => spawn(true));
+  }
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    build();
+    if (reduce) draw();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    t++;
+
+    if (mode === "clear") {
+      const x = w * 0.82, y = h * 0.18, pulse = 260 + 12 * Math.sin(t / 50);
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, pulse);
+      glow.addColorStop(0, "rgba(255,235,150,0.95)");
+      glow.addColorStop(0.25, "rgba(255,200,80,0.45)");
+      glow.addColorStop(1, "rgba(255,200,80,0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, w, h);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(t / 600);
+      ctx.strokeStyle = "rgba(255,230,140,0.14)";
+      ctx.lineWidth = 18;
+      for (let i = 0; i < 12; i++) {
+        ctx.rotate(Math.PI / 6);
+        ctx.beginPath();
+        ctx.moveTo(90, 0);
+        ctx.lineTo(Math.max(w, h), 0);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    if (mode === "cloud") {
+      ctx.fillStyle = "rgba(255,255,255,0.10)";
+      for (const c of items) {
+        c.x += c.v;
+        if (c.x - c.s > w) c.x = -c.s * 2;
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          ctx.arc(c.x + i * c.s * 0.45, c.y + (i % 2) * 18, c.s * 0.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    if (mode === "rain" || mode === "storm") {
+      ctx.strokeStyle = "rgba(200,220,255,0.55)";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      for (const d of items) {
+        ctx.moveTo(d.x, d.y);
+        ctx.lineTo(d.x - d.len * 0.15, d.y + d.len);
+        d.x -= d.v * 0.15;
+        d.y += d.v;
+        if (d.y > h) Object.assign(d, spawn(false));
+      }
+      ctx.stroke();
+      if (mode === "storm") {
+        if (Math.random() < 0.004) flash = 1;
+        if (flash > 0.02) {
+          ctx.fillStyle = `rgba(255,255,255,${flash * 0.35})`;
+          ctx.fillRect(0, 0, w, h);
+          flash *= 0.9;
+        }
+      }
+    }
+
+    if (mode === "snow") {
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      for (const s of items) {
+        s.y += s.v;
+        s.x += Math.sin(t / 60 + s.drift) * 0.5;
+        if (s.y > h) Object.assign(s, spawn(false));
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.rad, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    if (mode === "night") {
+      for (const s of items) {
+        ctx.fillStyle = `rgba(255,255,255,${0.4 + 0.6 * Math.abs(Math.sin(t / 40 + s.ph))})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.rad, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  function loop() {
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener("resize", resize);
+  resize();
+
+  return {
+    set(next) {
+      if (next === mode) return;
+      mode = next;
+      build();
+      if (reduce) return draw();
+      if (!running) { running = true; loop(); }
+    },
+  };
+})();
+
 // ---------- rendering ----------
 function render() {
   if (!data) return;
@@ -114,6 +250,7 @@ function render() {
 
   // After dark, clear and cloudy skies switch to the night theme
   const isNight = current.is_day === 0 && (theme === "clear" || theme === "cloud");
+  fx.set(document.body.dataset.theme);
   document.body.dataset.theme = isNight ? "night" : theme;
 
   $("place").textContent = data.label;

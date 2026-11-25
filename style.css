@@ -94,6 +94,16 @@ button {
   color: var(--ink); background: transparent;
   border: 2px solid var(--ink); border-radius: 999px;
 }
+
+#fx {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+main { position: relative; z-index: 1; }
 button.solid { background: var(--ink); color: #14212b; }
 button:hover { opacity: 0.85; }
 
